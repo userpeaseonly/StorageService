@@ -1,11 +1,12 @@
 import os
-from fastapi import UploadFile
+from fastapi import UploadFile, HTTPException
 from sqlalchemy.orm import Session
 from app.models.storage import Storage
 from fastapi.responses import FileResponse
-from uuid import uuid4
+
 
 STORAGE_PATH = "uploads/"
+
 
 # def save_file(file: UploadFile) -> str:
 #     filename = f"{uuid4()}.{file.filename.split('.')[-1]}"
@@ -18,16 +19,15 @@ def save_file(file: UploadFile, project_team: str, project_name: str) -> str:
     # Create directories in the format project_team/project_name
     folder_path = os.path.join(STORAGE_PATH, project_team, project_name)
     os.makedirs(folder_path, exist_ok=True)
-
-    # Save the file in the corresponding project directory
-    filename = f"{uuid4()}.{file.filename.split('.')[-1]}"
-    file_path = os.path.join(folder_path, filename)
+    # file ning o'zining nomini olib qolish kerak
+    file_path = os.path.join(folder_path, file.filename)
 
     # Save file to disk
     with open(file_path, "wb") as buffer:
         buffer.write(file.file.read())
 
     return file_path
+
 
 # def create_file(db: Session, project_name: str, project_team: str, file: UploadFile):
 #     file_path = save_file(file)
@@ -45,6 +45,7 @@ def create_file(db: Session, project_name: str, project_team: str, file: UploadF
     db.commit()
     db.refresh(storage)
     return storage
+
 
 # def get_file(db: Session, project_name: str, project_team: str):
 #     return db.query(Storage).filter_by(project_name=project_name, project_team=project_team).first()
@@ -69,17 +70,24 @@ def create_file(db: Session, project_name: str, project_team: str, file: UploadF
 def get_file(db: Session, project_name: str, project_team: str):
     storage = db.query(Storage).filter_by(project_name=project_name, project_team=project_team).first()
     if storage:
-        # Return the file as a FileResponse
-        return FileResponse(path=storage.file, media_type="application/octet-stream", filename=storage.file.split("/")[-1])
+        return FileResponse(path=storage.file, media_type="application/octet-stream",
+                            filename=storage.file.split("/")[-1])
     return None
 
-def update_file(db: Session, id: int, file: UploadFile):
+
+def update_file(db: Session, id: int, file: UploadFile, project_name: str, project_team: str):
     storage = db.query(Storage).filter_by(id=id).first()
+    if not storage:
+        raise HTTPException(status_code=404, detail="File not found")
     if file:
-        storage.file = save_file(file)
+        os.remove(storage.file)
+        storage.file = save_file(file=file, project_name=project_name, project_team=project_team)
+        storage.file_name = file.filename
     db.commit()
     db.refresh(storage)
     return storage
+# project name va team ni ham oladi aniq qaysi fileni update qilayotgani bilishi uchun
+
 
 def delete_file(db: Session, id: int):
     storage = db.query(Storage).filter_by(id=id).first()
