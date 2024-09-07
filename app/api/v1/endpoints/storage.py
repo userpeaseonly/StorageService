@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import List
 from app.schemas import storage as schemas
@@ -17,16 +18,41 @@ def upload_file(
 ):
     return create_file(db, project_name, project_team, file)
 
-@router.get("/", response_model=schemas.StorageInDB)
+# @router.get("/", response_model=schemas.StorageInDB)
+# def get_storage(
+#     project_name: str,
+#     project_team: str,
+#     db: Session = Depends(get_db)
+# ):
+#     storage = get_file(db, project_name, project_team)
+#     if not storage:
+#         raise HTTPException(status_code=404, detail="File not found")
+#     return storage
+
+# @router.get("/", response_model=schemas.StorageInDB)
+# def get_storage(
+#     project_name: str,
+#     project_team: str,
+#     db: Session = Depends(get_db)
+# ):
+#     storage_data = get_file(db, project_name, project_team)
+#     if not storage_data:
+#         raise HTTPException(status_code=404, detail="File not found")
+
+#     # Returning the file and other metadata
+#     return storage_data
+
+@router.get("/", response_class=FileResponse)
 def get_storage(
     project_name: str,
     project_team: str,
     db: Session = Depends(get_db)
 ):
-    storage = get_file(db, project_name, project_team)
-    if not storage:
+    storage_file = get_file(db, project_name, project_team)
+    if not storage_file:
         raise HTTPException(status_code=404, detail="File not found")
-    return storage
+
+    return storage_file
 
 @router.put("/{id}", response_model=schemas.StorageInDB)
 def update_storage(
@@ -39,3 +65,16 @@ def update_storage(
 @router.delete("/{id}", response_model=schemas.StorageInDB)
 def delete_storage(id: int, db: Session = Depends(get_db)):
     return delete_file(db, id)
+
+
+@router.get("/download", response_class=FileResponse)
+def download_file(
+    project_name: str,
+    project_team: str,
+    db: Session = Depends(get_db)
+):
+    storage_file = get_file(db, project_name, project_team)
+    if not storage_file:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    return storage_file

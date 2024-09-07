@@ -12,4 +12,4 @@ class Storage(Base):
     project_team = Column(String, index=True)
     file = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())  # Default and on update
