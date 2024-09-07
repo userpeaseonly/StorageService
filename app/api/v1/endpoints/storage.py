@@ -57,15 +57,14 @@ def get_storage(
     return storage_file
 
 
-@router.put("/{id}/", response_model=schemas.StorageInDB)
+@router.put("/", response_model=schemas.StorageInDB)
 def update_storage(
-        id: int,
         project_name: str,
         project_team: str, # project name va team qaysi foldetni update qilish kerakligini aniq bilish iuchun kerak
         file: UploadFile = File(None),
         db: Session = Depends(get_db)
 ):
-    return update_file(db, id, file, project_name, project_team)
+    return update_file(db, file, project_name, project_team)
 
 
 @router.delete("/{id}/", response_model=schemas.StorageInDB)
