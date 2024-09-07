@@ -75,8 +75,8 @@ def get_file(db: Session, project_name: str, project_team: str):
     return None
 
 
-def update_file(db: Session, id: int, file: UploadFile, project_name: str, project_team: str):
-    storage = db.query(Storage).filter_by(id=id).first()
+def update_file(db: Session, file: UploadFile, project_name: str, project_team: str):
+    storage = db.query(Storage).filter_by(project_name=project_name).first()
     if not storage:
         raise HTTPException(status_code=404, detail="File not found")
     if file:
