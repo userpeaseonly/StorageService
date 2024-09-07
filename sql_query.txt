@@ -1,0 +1,8 @@
+CREATE TABLE storage (
+    id SERIAL PRIMARY KEY,
+    project_name VARCHAR(255),
+    project_team VARCHAR(255),
+    file VARCHAR(255),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ
+);
