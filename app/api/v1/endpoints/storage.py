@@ -60,19 +60,21 @@ def get_storage(
 @router.put("/", response_model=schemas.StorageInDB)
 def update_storage(
         project_name: str,
-        project_team: str, # project name va team qaysi foldetni update qilish kerakligini aniq bilish iuchun kerak
+        project_team: str,  # project name va team qaysi foldetni update qilish kerakligini aniq bilish iuchun kerak
         file: UploadFile = File(None),
         db: Session = Depends(get_db)
 ):
     return update_file(db, file, project_name, project_team)
 
 
-@router.delete("/{id}/", response_model=schemas.StorageInDB)
+@router.delete("/", response_model=schemas.StorageInDB)
 def delete_storage(
-        id: int,
+        project_name: str,
+        project_team: str,
         db: Session = Depends(get_db)
 ):
-    return delete_file(db, id) # deletega id ni bersa, projectni ichidagi fileni o'chirib tashlaydi
+    return delete_file(db, project_name,
+                       project_team)
 
 
 @router.get("/download", response_class=FileResponse)
@@ -84,5 +86,4 @@ def download_file(
     storage_file = get_file(db, project_name, project_team)
     if not storage_file:
         raise HTTPException(status_code=404, detail="File not found")
-
     return storage_file

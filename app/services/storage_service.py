@@ -4,7 +4,6 @@ from sqlalchemy.orm import Session
 from app.models.storage import Storage
 from fastapi.responses import FileResponse
 
-
 STORAGE_PATH = "uploads/"
 
 
@@ -72,7 +71,7 @@ def get_file(db: Session, project_name: str, project_team: str):
     if storage:
         return FileResponse(path=storage.file, media_type="application/octet-stream",
                             filename=storage.file.split("/")[-1])
-    return None
+    raise HTTPException(status_code=404, detail="File not found")
 
 
 def update_file(db: Session, file: UploadFile, project_name: str, project_team: str):
@@ -83,16 +82,17 @@ def update_file(db: Session, file: UploadFile, project_name: str, project_team: 
         os.remove(storage.file)
         storage.file = save_file(file=file, project_name=project_name, project_team=project_team)
         storage.file_name = file.filename
-    db.commit()
-    db.refresh(storage)
-    return storage
-# project name va team ni ham oladi aniq qaysi fileni update qilayotgani bilishi uchun
+        db.commit()
+        db.refresh(storage)
+        return storage
+    return HTTPException(status_code=404, detail='Upload file to update')
 
 
-def delete_file(db: Session, id: int):
-    storage = db.query(Storage).filter_by(id=id).first()
+def delete_file(db: Session, project_name: str, project_team: str):
+    storage = db.query(Storage).filter_by(project_name=project_name).filter_by(project_team=project_team).first()
     if storage:
         os.remove(storage.file)
         db.delete(storage)
         db.commit()
-    return storage
+        return storage
+    return HTTPException(status_code=404, detail='File not found')
