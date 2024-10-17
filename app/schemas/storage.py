@@ -28,3 +28,5 @@ class StorageInDB(StorageBase):
     class Config:
         from_attributes = True
 
+class TreatyToken(BaseModel):
+    token: str
